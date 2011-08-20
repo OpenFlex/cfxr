@@ -54,7 +54,7 @@ static void SDLAudioCallback(Playback* userdata, Uint8 *stream, int len);
 	des.channels = 1;
 	des.callback = (void (*)(void *, Uint8 *, int))SDLAudioCallback;
 	des.userdata = self;
-	des.samples = 2048;
+	des.samples = 2048*16;
 	if(SDL_OpenAudio(&des, NULL)) {
 		NSLog(@"Failed opening audio device");
 		[self release]; return nil;
@@ -343,9 +343,19 @@ static void SDLAudioCallback(Playback* userdata, Uint8 *stream, int len);
 	}
 	else memset(stream, 0, len);		
 }
+
+static NSAutoreleasePool * pool = nil;
+static int poolCount = 0;
+
 static void SDLAudioCallback(Playback *playback, Uint8 *stream, int len)
 {
+	if (poolCount == 0) {
+		[pool release];
+		poolCount = 100000;
+		pool = [[NSAutoreleasePool alloc] init];
+	}
 	[playback audioCallback:stream:len];
+	poolCount--;
 }
 
 
